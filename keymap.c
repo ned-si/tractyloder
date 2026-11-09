@@ -7,8 +7,6 @@
  * Trackball related defines
  **************************/
 
-#include "pointing_device.h"
-#include "../../pmw3360/pmw3360.h"
 
 uint8_t track_mode = 0; // 0 Mousecursor; 1 arrowkeys/carret; 2 scrollwheel; 3 sound/brightness
 #define cursor_mode 0
@@ -109,16 +107,7 @@ enum custom_keycodes {
 #define KC_CTRLENT MT(MOD_LCTL, KC_ENT)
 #define KC_MOUSESC LT(_MOUSE, KC_ESC)
 
-#define KC_EXLM LSFT(KC_1)
-#define KC_AT LSFT(KC_2)
-#define KC_HASH LSFT(KC_3)
-#define KC_DLR LSFT(KC_4)
-#define KC_PERC LSFT(KC_5)
 #define KC_CAR LSFT(KC_6)
-#define KC_AMPR LSFT(KC_7)
-#define KC_ASTR LSFT(KC_8)
-#define KC_LPRN LSFT(KC_9)
-#define KC_RPRN LSFT(KC_0)
 
 #define KC_ALTAB OS_CTL(KC_TAB)
 #define KC_AALTAB OS_CTL(KC_TILDE)
@@ -498,20 +487,8 @@ bool process_record_user_impl(uint16_t keycode, keyrecord_t *record) {
    mouse_moved_timer = start_time;
    return true;
 }
-void interruptsOff(void) {
-        EIMSK &= ~(1<<INT6); // Disable int6 while processing
-}
-
-void interruptsOn(void) {
-  #ifndef POLLING
-        EIMSK |= (1<<INT6);                       //enable INT6
-  #endif
-}
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    interruptsOff();
-    bool ret = process_record_user_impl(keycode, record);
-    interruptsOn();
-    return ret;
+    return process_record_user_impl(keycode, record);
 }
 // Tap dance states
 typedef enum {
@@ -524,11 +501,11 @@ typedef enum {
 static td_state_t td_state;
 
 // function to track the current tapdance state
-int cur_dance (qk_tap_dance_state_t *state);
+int cur_dance (tap_dance_state_t *state);
 
 
 // track the tapdance state to return
-int cur_dance (qk_tap_dance_state_t *state) {
+int cur_dance (tap_dance_state_t *state) {
   if (state->count == 1) {
     if (state->interrupted || !state->pressed) {
         return SINGLE_TAP;
@@ -547,9 +524,9 @@ int cur_dance (qk_tap_dance_state_t *state) {
 // handle the possible states for each tapdance keycode you define:
 
 // `finished` function for each tapdance keycode
-void CA_CC_CV_finished (qk_tap_dance_state_t *state, void *user_data);
+void CA_CC_CV_finished (tap_dance_state_t *state, void *user_data);
 
-void CA_CC_CV_finished (qk_tap_dance_state_t *state, void *user_data) {
+void CA_CC_CV_finished (tap_dance_state_t *state, void *user_data) {
   td_state = cur_dance(state);
   switch (td_state) {
     case SINGLE_TAP:
@@ -565,25 +542,25 @@ void CA_CC_CV_finished (qk_tap_dance_state_t *state, void *user_data) {
 };
 
 // `finished` function for each tapdance keycode
-void UNI_W_L_finished (qk_tap_dance_state_t *state, void *user_data);
+void UNI_W_L_finished (tap_dance_state_t *state, void *user_data);
 
-void UNI_W_L_finished (qk_tap_dance_state_t *state, void *user_data) {
+void UNI_W_L_finished (tap_dance_state_t *state, void *user_data) {
   td_state = cur_dance(state);
   switch (td_state) {
     case SINGLE_TAP:
-      tap_code16(UC_M_WC);
+      set_unicode_input_mode(UNICODE_MODE_WINCOMPOSE);
       break;
     case DOUBLE_SINGLE_TAP:
-      tap_code16(UC_M_LN);
+      set_unicode_input_mode(UNICODE_MODE_LINUX);
     break;
     default: break;
   }
 };
 
 // `finished` function for each tapdance keycode
-void NXT_PRV_finished (qk_tap_dance_state_t *state, void *user_data);
+void NXT_PRV_finished (tap_dance_state_t *state, void *user_data);
 
-void NXT_PRV_finished (qk_tap_dance_state_t *state, void *user_data) {
+void NXT_PRV_finished (tap_dance_state_t *state, void *user_data) {
   td_state = cur_dance(state);
   switch (td_state) {
     case SINGLE_TAP:
@@ -596,7 +573,7 @@ void NXT_PRV_finished (qk_tap_dance_state_t *state, void *user_data) {
   }
 };
 
-qk_tap_dance_action_t tap_dance_actions[] = {
+tap_dance_action_t tap_dance_actions[] = {
     [CA_CC_CV] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, CA_CC_CV_finished, NULL),
     [UNI_W_L] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, UNI_W_L_finished, NULL),
     [NXT_PRV] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, NXT_PRV_finished, NULL),
@@ -637,7 +614,7 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
-[_MAIN] = LAYOUT( \
+[_MAIN] = LAYOUT_tractyloder( \
   KC_Q, KC_W, KC_E,    KC_R,    KC_T,                                       KC_Y, KC_ULCLK,    KC_IRCLK,   KC_O,   KC_P,    \
   HOME_A, HOME_S, HOME_D, HOME_F, HOME_G,                                 HOME_H, HOME_J,   HOME_K,  HOME_L, HOME_SCLN, \
   KC_Z, KC_X, KC_C,    KC_V,    KC_B,                                       KC_N, KC_M,    KC_COMM, KC_DOT, KC_SLSH, \
@@ -647,7 +624,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                        CACCCV, KC_SCROLL, KC_SPACE,  KC_SPACE
 ),
 
-[_SYMBOLS] = LAYOUT( \
+[_SYMBOLS] = LAYOUT_tractyloder( \
   _______, _______, _______,    DEGR,  KC_DQT,                               KC_PIPE, KC_HASH, KC_LCBR, KC_RCBR, _______,          \
   _______, KC_TILD, KC_ASTR,  KC_GRV, KC_QUOT,                                 KC_AT, KC_EXLM, KC_LBRC, KC_RBRC,  KC_DLR,         \
   _______, _______, KC_PERC, KC_CIRC, KC_MINS,                               KC_AMPR, KC_UNDS, KC_LPRN, KC_RPRN, KC_BSLS,         \
@@ -657,7 +634,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                             _______, _______, _______, _______ 
 ),
 
-[_ACCENTS] = LAYOUT( \
+[_ACCENTS] = LAYOUT_tractyloder( \
     _______, _______, E_ACUTE, E_GRAVE, _______,                                     DED_UML, U_GRAVE, I_CIRCU, O_CIRCU, _______, \
     A_GRAVE, A_CIRCU, E_CIRCU, _______, _______,                                     DED_CIR, _______, _______, _______, _______, \
     _______, _______, C_CDILA, _______, _______,                                     _______, _______, _______, _______, _______, \
@@ -667,17 +644,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                             _______, _______, _______, _______ 
 ),
 
-[_NUMBERS] = LAYOUT( \
+[_NUMBERS] = LAYOUT_tractyloder( \
     KC_F9  , KC_F10 , KC_F11 , KC_F12 , _______,                                     KC_PMNS, KC_7,    KC_8,    KC_9,    KC_PSLS, \
     KC_F5  , KC_F6  , KC_F7  , KC_F8  , KC_LGUI,                                     KC_PPLS, KC_4   , KC_5   , KC_6   ,    KC_0, \
     KC_F1  , KC_F2  , KC_F3  , KC_F4  , _______,                                      KC_DOT, KC_1   , KC_2   , KC_3   ,  KC_DOT, \
-               RESET, _______,                                                                   KC_0, KC_DOT,               \
+               QK_BOOT, _______,                                                                   KC_0, KC_DOT,               \
                                             MO(_NAV),                  _______,                                                  \
                                             _______, _______, _______, _______,                                                 \
                                             _______, _______, _______, _______ 
 ),
 
-[_NAV] = LAYOUT( \
+[_NAV] = LAYOUT_tractyloder( \
     _______, _______, _______, _______, _______,                                     KC_HOME, KC_PGDN, KC_PGUP, KC_END , _______, \
     KC_LGUI, KC_LALT, KC_LCTL, KC_LSFT, _______,                                     KC_LEFT, KC_DOWN, KC_UP  , KC_RGHT, _______, \
     KC_LALT, KC_LSFT, KC_LCTL, KC_LGUI, _______,                                    A(KC_SPC),G(C(KC_LEFT)),G(C(KC_RGHT)), _______,_______,\
@@ -702,19 +679,11 @@ Trackball stuff
  * Trackball handling
  **************************/
 
-void pointing_device_init(void){
+// QMK's pmw3360 driver reads the sensor; this keymap only post-processes the
+// report in pointing_device_task_user.
+void keyboard_post_init_user(void) {
     start_time = timer_read();
-	if(!is_keyboard_master())
-		return;
-
     mouse_moved_timer = timer_read();
-    #ifndef POLLING
-          EIMSK &= ~(1<<INT6); // Disable int6
-          EICRB |= (1<<ISC60)|(0<<ISC61);   //set up INT6 for falling edge
-          EIMSK |= (1<<INT6);                       //enable INT6
-    #endif
-
-	pmw_init();
 }
 
 int max(int num1, int num2) { return (num1 > num2 ) ? num1 : num2; }
@@ -768,8 +737,7 @@ void tap_tb(uint8_t keycode0, uint8_t keycode1, uint8_t keycode2, uint8_t keycod
 	}
 }
 
-void handle_pointing_device_modes(void){
-	report_mouse_t mouse_report = pointing_device_get_report();
+report_mouse_t handle_pointing_device_modes(report_mouse_t mouse_report){
 	if (track_mode == cursor_mode) {
 	    if (accel_enabled) {
           	    uint16_t diff = (abs(sensor_x) + abs(sensor_y));
@@ -826,47 +794,28 @@ void handle_pointing_device_modes(void){
 			tap_tb(KC_BRIGHTNESS_UP, KC_BRIGHTNESS_DOWN, KC_AUDIO_VOL_UP, KC_AUDIO_VOL_DOWN);
 		}
 	}
-	pointing_device_set_report(mouse_report);
-	pointing_device_send();
+	return mouse_report;
 }
 
-void get_sensor_data(void) {
-	if(!is_keyboard_master())
-		return;
-	report_pmw_t pmw_report = pmw_get_report();
-
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+	// QMK's driver negates both sensor deltas; undo that so the mode code
+	// below sees the raw sensor values it was written for.
 	if (integration_mode) {
-		sensor_x += pmw_report.x;
-		sensor_y += pmw_report.y;
+		sensor_x += -mouse_report.x;
+		sensor_y += -mouse_report.y;
 	} else {
-		sensor_x = pmw_report.x;
-		sensor_y = pmw_report.y;
+		sensor_x = -mouse_report.x;
+		sensor_y = -mouse_report.y;
 	}
+	// Only the active mode decides what moves.
+	mouse_report.x = 0;
+	mouse_report.y = 0;
+	return handle_pointing_device_modes(mouse_report);
 }
-
-void pointing_device_task(void) {
-#ifndef POLLING
-	if ( is_keyboard_master() && integration_mode )
-		handle_pointing_device_modes();
-#else
-	get_sensor_data();
-	handle_pointing_device_modes();
-#endif
-}
-
-#ifndef POLLING
-	ISR(INT6_vect) {
-	    // Don't allow us to be interrupted until we're done here
-	    interruptsOff();
-		get_sensor_data();
-		handle_pointing_device_modes();
-		interruptsOn();
-	}
-#endif
 
 #ifdef ENCODER_ENABLE
 uint8_t selected_layer = 0;
-void encoder_update_user(uint8_t index, bool clockwise) {
+bool encoder_update_user(uint8_t index, bool clockwise) {
    if (index == 0) {
      if (clockwise) {
          tap_code16(C(KC_TAB));
@@ -882,5 +831,6 @@ void encoder_update_user(uint8_t index, bool clockwise) {
             tap_code(KC_VOLD);
         }
     }
+    return false;
 }
 #endif

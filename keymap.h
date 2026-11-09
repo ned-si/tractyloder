@@ -5,7 +5,32 @@
 
 // Initialize variable holding the binary
 // representation of active modifiers.
-uint8_t mod_state;
+extern uint8_t mod_state;
+
+// Physical layout of this build, mapped onto the upstream 4x5 matrix. Upstream
+// LAYOUT has one more key per side (matrix [3,4] and [8,4]) and a different
+// argument order, so the keymaps use this macro instead.
+#define LAYOUT_tractyloder( \
+	L00, L01, L02, L03, L04,                     R00, R01, R02, R03, R04, \
+	L10, L11, L12, L13, L14,                     R10, R11, R12, R13, R14, \
+	L20, L21, L22, L23, L24,                     R20, R21, R22, R23, R24, \
+	     L31, L32,                                         R32, R31,      \
+	                   L33,                         R33,                  \
+	                           L40, L43, R40, R41,                        \
+	                           L42, L41, R42, R43                         \
+	) \
+	{ \
+		{ L00, L01, L02, L03, L04 }, \
+		{ L10, L11, L12, L13, L14 }, \
+		{ L20, L21, L22, L23, L24 }, \
+		{ KC_NO, L31, L32, L33, KC_NO }, \
+		{ KC_NO, L41, L42, L43, L40 }, \
+		{ R04, R03, R02, R01, R00 }, \
+		{ R14, R13, R12, R11, R10 }, \
+		{ R24, R23, R22, R21, R20 }, \
+		{ KC_NO, R31, R32, R33, KC_NO }, \
+		{ KC_NO, R43, R42, R41, R40 } \
+	}
 
 enum layers {
     _MAIN = 0,
